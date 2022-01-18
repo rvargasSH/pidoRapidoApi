@@ -14,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -34,6 +35,7 @@ import sainthonore.pidorapidoapi.util.MailBody;
 import sainthonore.pidorapidoapi.util.PopulateOrder;
 import sainthonore.pidorapidoapi.util.ResponseUtil;
 import sainthonore.pidorapidoapi.util.SendMail;
+import sainthonore.pidorapidoapi.viewmodel.MailVM;
 import sainthonore.pidorapidoapi.viewmodel.MercadoPagoResponse;
 import sainthonore.pidorapidoapi.viewmodel.OrderInfoVM;
 import sainthonore.pidorapidoapi.viewmodel.RedirectResponseVM;
@@ -110,6 +112,24 @@ public class OrderController {
         }
     }
 
+    @RequestMapping(value = "save-mail/{orderCode}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> saveNail(@RequestBody MailVM model, @PathVariable String orderCode) throws Exception {
+
+        Optional<OrderInfo> orderInfo = orderInfoRepository.findByOriCode(orderCode);
+        if (orderInfo.isPresent()) {
+            Pregunta pregunta = new Pregunta();
+            pregunta.setCreatedAt(new Date());
+            pregunta.setOrdId(orderInfo.get().getOrdId());
+            pregunta.setPregunta("Email");
+            pregunta.setRespuesta(model.getEmail());
+            preguntasRepository.save(pregunta);
+            return ResponseEntity.ok("Saved");
+        } else {
+            return ResponseEntity.badRequest()
+                    .body("No existe la tienda desde la cual esta intentando enviar la orden");
+        }
+    }
+
     // Index(Get All)
     @RequestMapping(value = "/success", method = RequestMethod.GET)
     public ResponseEntity<?> success(@RequestParam String collection_id,
@@ -132,10 +152,7 @@ public class OrderController {
                     mailBody.storeMessage(orderInfo.get().getOriCode(), orderInfo.get().getBrand().getName(),
                             orderInfo.get()));
             Optional<Store> storeInfo = storeRepository.findById(orderInfo.get().getStoreId());
-            URI yahoo = new URI(storeInfo.get().getUrlWebPage());
-            HttpHeaders httpHeaders = new HttpHeaders();
-            httpHeaders.setLocation(yahoo);
-            return new ResponseEntity<>(httpHeaders, HttpStatus.SEE_OTHER);
+            return ResponseEntity.ok(storeInfo.get().getUrlWebPage());
         } else {
             return ResponseEntity.badRequest()
                     .body("No existe la tienda desde la cual esta intentando enviar la orden");
@@ -173,10 +190,26 @@ public class OrderController {
         return ResponseEntity.ok("Order enviada");
     }
 
+    @RequestMapping(value = "check-mail/{orderCode}", method = RequestMethod.GET)
+    public ResponseEntity<?> checkMail(@PathVariable String orderCode) throws Exception {
+
+        Optional<OrderInfo> orderInfo = orderInfoRepository.findByOriCode(orderCode);
+        if (orderInfo.isPresent()) {
+            String email = getEmail(orderInfo.get().getPreguntas());
+            if (email == null) {
+                return ResponseEntity.badRequest()
+                        .body("NoMail");
+            }
+
+        } else {
+            return ResponseEntity.badRequest()
+                    .body("No existe la orden");
+        }
+        return ResponseEntity.ok("Email Existente");
+    }
+
     public String getEmail(List<Pregunta> preguntas) {
         for (int i = 0; i < preguntas.size(); i++) {
-            System.out.println(preguntas.get(i).getPregunta() + "-end");
-            System.out.println(preguntas.get(i).getRespuesta() + "-end");
             if (preguntas.get(i).getPregunta().equals("Email")) {
                 return preguntas.get(i).getRespuesta();
             }
