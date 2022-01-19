@@ -90,52 +90,64 @@ public class OrderController {
     @RequestMapping(value = "order-info/{stoCode}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> create(@RequestBody OrderInfoVM model, @PathVariable String stoCode) throws Exception {
         Optional<Store> storeInfo = storeRepository.findByStoCode(stoCode);
-        LOGGER.info("peticionoriginal" + new Gson().toJson(model));
-        if (storeInfo.isPresent()) {
-            OrderInfo newOrdersaved = orderInfoRepository.saveAndFlush(
-                    populateOrder.populateOrder(model, storeInfo.get().getBraId(),
-                            storeInfo.get().getStoId()));
+        LOGGER.info("orderInfo" + new Gson().toJson(model));
+        try {
+            if (storeInfo.isPresent()) {
+                OrderInfo newOrdersaved = orderInfoRepository.saveAndFlush(
+                        populateOrder.populateOrder(model, storeInfo.get().getBraId(),
+                                storeInfo.get().getStoId()));
 
-            for (int i = 0; i < model.getOrder().getProductos().size(); i++) {
-                productoRepository.save(populateOrder.populateProducto(model.getOrder().getProductos().get(i),
-                        newOrdersaved.getOrdId()));
+                for (int i = 0; i < model.getOrder().getProductos().size(); i++) {
+                    productoRepository.save(populateOrder.populateProducto(model.getOrder().getProductos().get(i),
+                            newOrdersaved.getOrdId()));
+                }
+                for (int i = 0; i < model.getOrder().getPreguntas().size(); i++) {
+                    model.getOrder().getPreguntas().get(i)
+                            .setPregunta(model.getOrder().getPreguntas().get(i).getPregunta().replace("*", ""));
+                    model.getOrder().getPreguntas().get(i).setOrdId(newOrdersaved.getOrdId());
+                    preguntasRepository.save(model.getOrder().getPreguntas().get(i));
+                }
+                String orderCode = "O" + storeInfo.get().getName().charAt(0) + newOrdersaved.getOrdId();
+                newOrdersaved.setOriCode(orderCode);
+                orderInfoRepository.save(newOrdersaved);
+                // Checkout Mercado Pago
+                RedirectResponseVM responseVM = new RedirectResponseVM();
+                responseVM.setRedirect_url(
+                        mercadoPagoService.createPreference(model.getOrder().getProductos(), orderCode));
+                LOGGER.info("response orderInfo ok:" + new Gson().toJson(responseVM));
+                return ResponseEntity.ok(responseVM);
+            } else {
+                LOGGER.error("error orderInfo:No existe la tienda desde la cual esta intentando enviar la orden");
+                return ResponseEntity.badRequest()
+                        .body("No existe la tienda desde la cual esta intentando enviar la orden");
             }
-            for (int i = 0; i < model.getOrder().getPreguntas().size(); i++) {
-                model.getOrder().getPreguntas().get(i)
-                        .setPregunta(model.getOrder().getPreguntas().get(i).getPregunta().replace("*", ""));
-                model.getOrder().getPreguntas().get(i).setOrdId(newOrdersaved.getOrdId());
-                preguntasRepository.save(model.getOrder().getPreguntas().get(i));
-            }
-            String orderCode = "O" + storeInfo.get().getName().charAt(0) + newOrdersaved.getOrdId();
-            newOrdersaved.setOriCode(orderCode);
-            orderInfoRepository.save(newOrdersaved);
-            // Checkout Mercado Pago
-            RedirectResponseVM responseVM = new RedirectResponseVM();
-            responseVM.setRedirect_url(
-                    mercadoPagoService.createPreference(model.getOrder().getProductos(), orderCode));
-            return ResponseEntity.ok(responseVM);
-        } else {
-            return ResponseEntity.badRequest()
-                    .body("No existe la tienda desde la cual esta intentando enviar la orden");
+        } catch (Exception e) {
+            LOGGER.error("error orderInfo " + e.getMessage());
+            return ResponseEntity.badRequest().body("Error al procesar la transacion");
         }
+
     }
 
     @RequestMapping(value = "save-mail/{orderCode}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> saveNail(@RequestBody MailVM model, @PathVariable String orderCode) throws Exception {
-
         Optional<OrderInfo> orderInfo = orderInfoRepository.findByOriCode(orderCode);
-        if (orderInfo.isPresent()) {
-            Pregunta pregunta = new Pregunta();
-            pregunta.setCreatedAt(new Date());
-            pregunta.setOrdId(orderInfo.get().getOrdId());
-            pregunta.setPregunta("Email");
-            pregunta.setRespuesta(model.getEmail());
-            preguntasRepository.save(pregunta);
-            return ResponseEntity.ok("Saved");
-        } else {
-            return ResponseEntity.badRequest()
-                    .body("No existe la tienda desde la cual esta intentando enviar la orden");
+        try {
+            if (orderInfo.isPresent()) {
+                Pregunta pregunta = new Pregunta();
+                pregunta.setCreatedAt(new Date());
+                pregunta.setOrdId(orderInfo.get().getOrdId());
+                pregunta.setPregunta("Email");
+                pregunta.setRespuesta(model.getEmail());
+                preguntasRepository.save(pregunta);
+                return ResponseEntity.ok("Saved");
+            } else {
+                return ResponseEntity.badRequest()
+                        .body("No existe la tienda desde la cual esta intentando enviar la orden");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al guardar el correo");
         }
+
     }
 
     // Index(Get All)
@@ -145,26 +157,33 @@ public class OrderController {
             @RequestParam String payment_id, @RequestParam String status, @RequestParam String external_reference,
             @RequestParam String merchant_order_id, @RequestParam String preference_id)
             throws UnknownHostException, MessagingException, URISyntaxException {
+        LOGGER.info("success" + external_reference);
+        try {
+            Optional<OrderInfo> orderInfo = orderInfoRepository.findByOriCode(external_reference);
+            if (orderInfo.isPresent()) {
+                // Set status 2 (payed)
+                orderInfo.get().setOrsId(Long.parseLong("2"));
+                orderInfo.get().setLastModifiedAt(new Date());
 
-        Optional<OrderInfo> orderInfo = orderInfoRepository.findByOriCode(external_reference);
-        if (orderInfo.isPresent()) {
-            // Set status 2 (payed)
-            orderInfo.get().setOrsId(Long.parseLong("2"));
-            orderInfo.get().setLastModifiedAt(new Date());
-
-            // Send mail to the custom
-            sendMail.singleAddress(getEmail(orderInfo.get().getPreguntas()), "Pedido registrado",
-                    mailBody.customMessage(orderInfo.get().getOriCode(), orderInfo.get().getBrand().getName()));
-            // Send mail to store
-            sendMail.singleAddress(orderInfo.get().getStore().getNotificationMail(), "Pedido registrado",
-                    mailBody.storeMessage(orderInfo.get().getOriCode(), orderInfo.get().getBrand().getName(),
-                            orderInfo.get()));
-            Optional<Store> storeInfo = storeRepository.findById(orderInfo.get().getStoreId());
-            return ResponseEntity.ok(storeInfo.get().getUrlWebPage());
-        } else {
-            return ResponseEntity.badRequest()
-                    .body("No existe la tienda desde la cual esta intentando enviar la orden");
+                // Send mail to the custom
+                sendMail.singleAddress(getEmail(orderInfo.get().getPreguntas()), "Pedido registrado",
+                        mailBody.customMessage(orderInfo.get().getOriCode(), orderInfo.get().getBrand().getName()));
+                // Send mail to store
+                sendMail.singleAddress(orderInfo.get().getStore().getNotificationMail(), "Pedido registrado",
+                        mailBody.storeMessage(orderInfo.get().getOriCode(), orderInfo.get().getBrand().getName(),
+                                orderInfo.get()));
+                Optional<Store> storeInfo = storeRepository.findById(orderInfo.get().getStoreId());
+                return ResponseEntity.ok(storeInfo.get().getUrlWebPage());
+            } else {
+                LOGGER.error("error success:No existe la tienda desde la cual esta intentando enviar la orden ");
+                return ResponseEntity.badRequest()
+                        .body("No existe la tienda desde la cual esta intentando enviar la orden");
+            }
+        } catch (Exception e) {
+            LOGGER.error("error success " + e.getMessage());
+            return ResponseEntity.badRequest().body("Ocurrio un error al gestionar la informacion");
         }
+
     }
 
     @RequestMapping(value = "/pending", method = RequestMethod.GET)
