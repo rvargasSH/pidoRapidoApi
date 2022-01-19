@@ -9,6 +9,8 @@ import java.util.Optional;
 
 import javax.mail.MessagingException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -39,6 +41,8 @@ import sainthonore.pidorapidoapi.viewmodel.MailVM;
 import sainthonore.pidorapidoapi.viewmodel.MercadoPagoResponse;
 import sainthonore.pidorapidoapi.viewmodel.OrderInfoVM;
 import sainthonore.pidorapidoapi.viewmodel.RedirectResponseVM;
+
+import com.google.gson.Gson;
 import com.mercadopago.MercadoPago;
 import com.mercadopago.exceptions.MPConfException;
 import com.mercadopago.exceptions.MPException;
@@ -76,6 +80,8 @@ public class OrderController {
     @Autowired
     MailBody mailBody;
 
+    public final static Logger LOGGER = LoggerFactory.getLogger(OrderController.class);
+
     @RequestMapping(value = "", method = RequestMethod.GET)
     public ResponseEntity<?> index() {
         return null;
@@ -83,8 +89,8 @@ public class OrderController {
 
     @RequestMapping(value = "order-info/{stoCode}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> create(@RequestBody OrderInfoVM model, @PathVariable String stoCode) throws Exception {
-        System.out.println("come to create order");
         Optional<Store> storeInfo = storeRepository.findByStoCode(stoCode);
+        LOGGER.info("peticionoriginal" + new Gson().toJson(model));
         if (storeInfo.isPresent()) {
             OrderInfo newOrdersaved = orderInfoRepository.saveAndFlush(
                     populateOrder.populateOrder(model, storeInfo.get().getBraId(),
