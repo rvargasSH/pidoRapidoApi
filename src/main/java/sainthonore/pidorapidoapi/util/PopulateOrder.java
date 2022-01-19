@@ -2,6 +2,7 @@ package sainthonore.pidorapidoapi.util;
 
 import java.util.Date;
 
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.sql.ordering.antlr.OrderingSpecification.Ordering;
 import org.springframework.stereotype.Component;
 
@@ -39,7 +40,7 @@ public class PopulateOrder {
         productoReturn.setCategoria(productoInfo.getCategoria());
         productoReturn.setCodigo(productoInfo.getCodigo());
         productoReturn.setCreatedAt(new Date());
-        productoReturn.setDescripcion(productoInfo.getDescripcion());
+        productoReturn.setDescripcion(StringUtils.substring(productoInfo.getDescripcion(), 0, 200));
         productoReturn.setDescuento(productoInfo.getDescuento());
         productoReturn.setImagen(productoInfo.getImagen());
         productoReturn.setImagenTamano(productoInfo.getImagen_tamano());
