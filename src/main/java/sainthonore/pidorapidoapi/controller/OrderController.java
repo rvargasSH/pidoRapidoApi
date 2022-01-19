@@ -83,7 +83,7 @@ public class OrderController {
 
     @RequestMapping(value = "order-info/{stoCode}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> create(@RequestBody OrderInfoVM model, @PathVariable String stoCode) throws Exception {
-
+        System.out.println("come to create order");
         Optional<Store> storeInfo = storeRepository.findByStoCode(stoCode);
         if (storeInfo.isPresent()) {
             OrderInfo newOrdersaved = orderInfoRepository.saveAndFlush(
