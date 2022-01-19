@@ -95,6 +95,8 @@ public class OrderController {
                         newOrdersaved.getOrdId()));
             }
             for (int i = 0; i < model.getOrder().getPreguntas().size(); i++) {
+                model.getOrder().getPreguntas().get(i)
+                        .setPregunta(model.getOrder().getPreguntas().get(i).getPregunta().replace("*", ""));
                 model.getOrder().getPreguntas().get(i).setOrdId(newOrdersaved.getOrdId());
                 preguntasRepository.save(model.getOrder().getPreguntas().get(i));
             }
