@@ -38,9 +38,9 @@ public class MercadoPagoService {
         }
 
         BackUrls backUrls = new BackUrls(
-                urlNotification + "/success",
-                urlNotification + "/pending",
-                urlNotification + "/failure");
+                urlNotification,
+                urlNotification,
+                urlNotification);
         preference.setBackUrls(backUrls);
         preference.setBinaryMode(true);
         preference.setExternalReference(orderCode);
