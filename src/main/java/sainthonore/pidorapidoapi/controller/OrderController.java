@@ -6,6 +6,8 @@ import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.mail.MessagingException;
 
@@ -133,18 +135,24 @@ public class OrderController {
         Optional<OrderInfo> orderInfo = orderInfoRepository.findByOriCode(orderCode);
         try {
             if (orderInfo.isPresent()) {
+                Optional<Pregunta> preguntaPrevia = preguntasRepository
+                        .findByOrdIdAndPregunta(orderInfo.get().getOrdId(), "Email");
                 Pregunta pregunta = new Pregunta();
+                if (preguntaPrevia.isPresent()) {
+                    pregunta = preguntaPrevia.get();
+                }
                 pregunta.setCreatedAt(new Date());
                 pregunta.setOrdId(orderInfo.get().getOrdId());
                 pregunta.setPregunta("Email");
                 pregunta.setRespuesta(model.getEmail());
                 preguntasRepository.save(pregunta);
-                return ResponseEntity.ok("Saved");
+                return ResponseEntity.ok(responseUtil.responseSuccessBody(orderInfo.get().getBrand().getUrlLogo()));
             } else {
                 return ResponseEntity.badRequest()
                         .body("No existe la tienda desde la cual esta intentando enviar la orden");
             }
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             return ResponseEntity.badRequest().body("Error al guardar el correo");
         }
 
@@ -166,10 +174,12 @@ public class OrderController {
                 orderInfo.get().setLastModifiedAt(new Date());
 
                 // Send mail to the custom
-                sendMail.singleAddress(getEmail(orderInfo.get().getPreguntas()), "Pedido registrado",
-                        mailBody.customMessage(orderInfo.get().getOriCode(), orderInfo.get().getBrand().getName()));
+                sendMail.singleAddress(getEmail(orderInfo.get().getPreguntas()),
+                        "Gracias por comprar en " + orderInfo.get().getBrand().getName(),
+                        mailBody.customMessage(orderInfo.get().getOriCode(), orderInfo.get().getBrand().getName(),
+                                orderInfo.get()));
                 // Send mail to store
-                sendMail.singleAddress(orderInfo.get().getStore().getNotificationMail(), "Pedido registrado",
+                sendMail.singleAddress(orderInfo.get().getStore().getNotificationMail(), "¡Recibimos una nueva compra!",
                         mailBody.storeMessage(orderInfo.get().getOriCode(), orderInfo.get().getBrand().getName(),
                                 orderInfo.get()));
                 Optional<Store> storeInfo = storeRepository.findById(orderInfo.get().getStoreId());
@@ -210,7 +220,7 @@ public class OrderController {
             orderInfo.get().setLastModifiedAt(new Date());
 
             // Send mail to the custom
-            sendMail.singleAddress(getEmail(orderInfo.get().getPreguntas()), "Pedido enviado",
+            sendMail.singleAddress(getEmail(orderInfo.get().getPreguntas()), "¡Tu pedido ya está listo!",
                     mailBody.orderDelivery(orderInfo.get().getOriCode(), orderInfo.get().getBrand().getName()));
 
         }
@@ -227,12 +237,16 @@ public class OrderController {
                 return ResponseEntity.badRequest()
                         .body("NoMail");
             }
+            if (!isMail(email)) {
+                return ResponseEntity.badRequest()
+                        .body("NoMail");
+            }
 
         } else {
             return ResponseEntity.badRequest()
                     .body("No existe la orden");
         }
-        return ResponseEntity.ok("Email Existente");
+        return ResponseEntity.ok(orderInfo.get().getBrand().getUrlLogo());
     }
 
     public String getEmail(List<Pregunta> preguntas) {
@@ -242,6 +256,18 @@ public class OrderController {
             }
         }
         return null;
+    }
+
+    public static boolean isMail(String mail) {
+        Pattern pattern = Pattern.compile("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,4}");
+        Matcher mat = pattern.matcher(mail);
+        if (mat.matches()) {
+
+            return true;
+        } else {
+
+            return false;
+        }
     }
 
 }

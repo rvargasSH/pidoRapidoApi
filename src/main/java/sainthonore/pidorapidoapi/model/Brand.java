@@ -23,4 +23,7 @@ public class Brand extends Audit<String> {
 
     @Column(nullable = true, unique = false)
     private String keyMercadoPago;
+
+    @Column(nullable = true, unique = true)
+    private String urlLogo;
 }
