@@ -35,4 +35,8 @@ public class Store extends Audit<String> {
 
     @Column(nullable = true, unique = false)
     private String urlWebPage;
+
+    @Column(nullable = true, unique = false)
+    private String tiempoEntrega;
+
 }

@@ -73,6 +73,9 @@ public class OrderInfo extends Audit<String> {
     @Column(nullable = true, unique = true)
     private String sandboxinitpoint;
 
+    @Column(nullable = true, unique = true)
+    private String paimentId;
+
     @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "orderInfo")
     @JsonIgnore
     @LazyCollection(LazyCollectionOption.FALSE)

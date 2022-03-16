@@ -42,12 +42,13 @@ public class MercadoPagoService {
                 urlNotification,
                 urlNotification);
         preference.setBackUrls(backUrls);
-        preference.setBinaryMode(true);
+        // preference.setBinaryMode(true);
         preference.setExternalReference(orderCode);
         preference.setAutoReturn(AutoReturn.all);
         // Crea un ítem en la preferencia
         preference.save();
-        return preference.getSandboxInitPoint();
+        // return preference.getSandboxInitPoint();
+        return preference.getInitPoint();
 
     }
 

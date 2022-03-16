@@ -172,17 +172,19 @@ public class OrderController {
                 // Set status 2 (payed)
                 orderInfo.get().setOrsId(Long.parseLong("2"));
                 orderInfo.get().setLastModifiedAt(new Date());
+                orderInfo.get().setPaimentId(payment_id);
 
                 // Send mail to the custom
                 sendMail.singleAddress(getEmail(orderInfo.get().getPreguntas()),
                         "Gracias por comprar en " + orderInfo.get().getBrand().getName(),
-                        mailBody.customMessage(orderInfo.get().getOriCode(), orderInfo.get().getBrand().getName(),
+                        mailBody.customMessage(orderInfo.get().getOriCode(), getName(orderInfo.get().getPreguntas()),
                                 orderInfo.get()));
                 // Send mail to store
                 sendMail.singleAddress(orderInfo.get().getStore().getNotificationMail(), "¡Recibimos una nueva compra!",
                         mailBody.storeMessage(orderInfo.get().getOriCode(), orderInfo.get().getBrand().getName(),
                                 orderInfo.get()));
                 Optional<Store> storeInfo = storeRepository.findById(orderInfo.get().getStoreId());
+                orderInfoRepository.save(orderInfo.get());
                 return ResponseEntity.ok(storeInfo.get().getUrlWebPage());
             } else {
                 LOGGER.error("error success:No existe la tienda desde la cual esta intentando enviar la orden ");
@@ -218,10 +220,12 @@ public class OrderController {
             // Set status 2 (payed)
             orderInfo.get().setOrsId(Long.parseLong("4"));
             orderInfo.get().setLastModifiedAt(new Date());
+            orderInfoRepository.save(orderInfo.get());
 
             // Send mail to the custom
             sendMail.singleAddress(getEmail(orderInfo.get().getPreguntas()), "¡Tu pedido ya está listo!",
-                    mailBody.orderDelivery(orderInfo.get().getOriCode(), orderInfo.get().getBrand().getName()));
+                    mailBody.orderDelivery(orderInfo.get().getOriCode(), getName(orderInfo.get().getPreguntas()),
+                            orderInfo.get().getStore().getTiempoEntrega()));
 
         }
         return ResponseEntity.ok("Order enviada");
@@ -252,6 +256,15 @@ public class OrderController {
     public String getEmail(List<Pregunta> preguntas) {
         for (int i = 0; i < preguntas.size(); i++) {
             if (preguntas.get(i).getPregunta().equals("Email")) {
+                return preguntas.get(i).getRespuesta();
+            }
+        }
+        return null;
+    }
+
+    public String getName(List<Pregunta> preguntas) {
+        for (int i = 0; i < preguntas.size(); i++) {
+            if (preguntas.get(i).getPregunta().equals("Nombre Completo")) {
                 return preguntas.get(i).getRespuesta();
             }
         }
