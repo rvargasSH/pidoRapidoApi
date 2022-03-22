@@ -115,7 +115,8 @@ public class OrderController {
                 // Checkout Mercado Pago
                 RedirectResponseVM responseVM = new RedirectResponseVM();
                 responseVM.setRedirect_url(
-                        mercadoPagoService.createPreference(model.getOrder().getProductos(), orderCode));
+                        mercadoPagoService.createPreference(model.getOrder().getProductos(), orderCode,
+                                model.getOrder()));
                 LOGGER.info("response orderInfo ok:" + new Gson().toJson(responseVM));
                 return ResponseEntity.ok(responseVM);
             } else {
@@ -217,6 +218,10 @@ public class OrderController {
 
         Optional<OrderInfo> orderInfo = orderInfoRepository.findByOriCode(orderCode);
         if (orderInfo.isPresent()) {
+            if (orderInfo.get().getOrsId() == 4) {
+                String response = "<html><head> <style>h1 {text-align: center;color:orange}</style></head><body><h1>La orden fue enviada en un intento previo</h1></body></html>";
+                return ResponseEntity.ok(response);
+            }
             // Set status 2 (payed)
             orderInfo.get().setOrsId(Long.parseLong("4"));
             orderInfo.get().setLastModifiedAt(new Date());
@@ -225,10 +230,15 @@ public class OrderController {
             // Send mail to the custom
             sendMail.singleAddress(getEmail(orderInfo.get().getPreguntas()), "¡Tu pedido ya está listo!",
                     mailBody.orderDelivery(orderInfo.get().getOriCode(), getName(orderInfo.get().getPreguntas()),
-                            orderInfo.get().getStore().getTiempoEntrega()));
+                            orderInfo.get().getStore().getTiempoEntrega(),
+                            orderInfo.get().getStore().getWhatsappNumber()));
 
+        } else {
+            String response = "<html><head> <style>h1 {text-align: center;color:red}</style></head><body><h1>No se encuentr al orden que intenta enviar</h1></body></html>";
+            return ResponseEntity.ok(response);
         }
-        return ResponseEntity.ok("Order enviada");
+        String response = "<html><head> <style>h1 {text-align: center;}</style></head><body><h1>Orden Enviada</h1></body></html>";
+        return ResponseEntity.ok(response);
     }
 
     @RequestMapping(value = "check-mail/{orderCode}", method = RequestMethod.GET)

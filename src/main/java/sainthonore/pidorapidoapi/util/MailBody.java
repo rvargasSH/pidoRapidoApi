@@ -35,23 +35,35 @@ public class MailBody {
                                         + "</td></tr>";
                         totalPrice += Float.parseFloat(orderInfo.getProductos().get(i).getPrecio());
                 }
+                if (orderInfo.getPrecioExtrasFinal() > 0) {
+                        mailbody += "<tr><td style='border: 1px solid black'>Costo de envio</td>";
+                        mailbody += "<td style='border: 1px solid black'>1.0</td>";
+                        mailbody += "<td style='border: 1px solid black'>$" + orderInfo.getPrecioExtrasFinal()
+                                        + "</td></tr>";
+                        totalPrice += orderInfo.getPrecioExtrasFinal();
+                }
                 mailbody += "<tr><td><b>Subtotal</b></td><td colspan='2'><b>" + totalPrice + "</b></td></tr>";
                 mailbody += "</table><br>";
                 mailbody += "<b>El tiempo estimado de envío es de " + orderInfo.getStore().getTiempoEntrega()
                                 + " días hábiles</b>, agradecemos tu comprensión.<br><br>";
-                mailbody += "Si tienes cualquier duda o problema con respecto a tu orden, <b>no dudes en escribirnos a nuestro Whatsapp +56 9 3955 4162.</b><br><br>";
+                mailbody += "Si tienes cualquier duda o problema con respecto a tu orden, <b>no dudes en escribirnos a nuestro Whatsapp "
+                                + orderInfo.getStore().getWhatsappNumber()
+                                + " .</b><br><br>";
                 mailbody += "¡Nos vemos pronto!.<br>";
                 return mailbody;
         }
 
-        public String orderDelivery(final String orderCode, String customName, String deliveryTime)
+        public String orderDelivery(final String orderCode, String customName, String deliveryTime,
+                        String whatsappNumber)
                         throws UnknownHostException {
                 String mailbody = "¡Hola " + customName + " !<br><br>";
                 mailbody += "Tenemos buenas noticias: tu pedido ya fue preparado y está listo para ser enviado.<br><br>";
                 mailbody += "Recuerda que los <b>tiempos de despacho son entre " + deliveryTime
                                 + " días hábiles</b>.<br><br>";
                 mailbody += "Al recibir tu pedido, deberás mostrar este e-mail a nuestro transportista. Si es otra persona la que va a recibir el paquete, asegúrate de enviarle este e-mail o una foto de él.<br><br>";
-                mailbody += "Si tienes cualquier duda o problema con respecto a tu orden, no dudes en escribirnos a nuestro <b>Whatsapp +56 9 3955 4162</b>.<br><br>";
+                mailbody += "Si tienes cualquier duda o problema con respecto a tu orden, no dudes en escribirnos a nuestro <b>Whatsapp "
+                                + whatsappNumber
+                                + "</b>.<br><br>";
                 mailbody += "¡Nos vemos pronto!";
                 return mailbody;
         }
@@ -76,6 +88,13 @@ public class MailBody {
                                         + orderInfo.getProductos().get(i).getPrecio()
                                         + "</td></tr>";
                         totalPrice += Float.parseFloat(orderInfo.getProductos().get(i).getPrecio());
+                }
+                if (orderInfo.getPrecioExtrasFinal() > 0) {
+                        mailbody += "<tr><td style='border: 1px solid black'>Costo de envio</td>";
+                        mailbody += "<td style='border: 1px solid black'>1.0</td>";
+                        mailbody += "<td style='border: 1px solid black'>$" + orderInfo.getPrecioExtrasFinal()
+                                        + "</td></tr>";
+                        totalPrice += orderInfo.getPrecioExtrasFinal();
                 }
                 mailbody += "<tr><td><b>Subtotal</b></td><td colspan='2'><b>" + totalPrice + "</b></td></tr>";
                 mailbody += "</table><br>";

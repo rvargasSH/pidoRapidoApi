@@ -39,4 +39,7 @@ public class Store extends Audit<String> {
     @Column(nullable = true, unique = false)
     private String tiempoEntrega;
 
+    @Column(nullable = true, unique = false)
+    private String whatsappNumber;
+
 }

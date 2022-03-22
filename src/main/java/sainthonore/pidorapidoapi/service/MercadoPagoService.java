@@ -12,6 +12,8 @@ import com.mercadopago.resources.datastructures.preference.Item;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import sainthonore.pidorapidoapi.model.OrderInfo;
+import sainthonore.pidorapidoapi.viewmodel.OrderDetailVM;
 import sainthonore.pidorapidoapi.viewmodel.ProductoVM;
 
 @Service
@@ -23,7 +25,8 @@ public class MercadoPagoService {
     @Value("${accessToken}")
     private String accessToken;
 
-    public String createPreference(List<ProductoVM> productos, String orderCode) throws MPException {
+    public String createPreference(List<ProductoVM> productos, String orderCode, OrderDetailVM orderInfo)
+            throws MPException {
         MercadoPago.SDK.setAccessToken(accessToken);
         Preference preference = new Preference();
 
@@ -36,6 +39,11 @@ public class MercadoPagoService {
                     .setUnitPrice(Float.parseFloat(productos.get(i).getPrecio()));
             preference.appendItem(item);
         }
+        Item item = new Item();
+        item.setTitle("Costo de envio")
+                .setQuantity(1)
+                .setUnitPrice(orderInfo.getPrecio_extras_final());
+        preference.appendItem(item);
 
         BackUrls backUrls = new BackUrls(
                 urlNotification,
