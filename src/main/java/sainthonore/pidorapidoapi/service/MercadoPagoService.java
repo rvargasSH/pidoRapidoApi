@@ -19,45 +19,45 @@ import sainthonore.pidorapidoapi.viewmodel.ProductoVM;
 @Service
 public class MercadoPagoService {
 
-    @Value("${urlNotification}")
-    private String urlNotification;
+        @Value("${urlNotification}")
+        private String urlNotification;
 
-    @Value("${accessToken}")
-    private String accessToken;
+        @Value("${accessToken}")
+        private String accessToken;
 
-    public String createPreference(List<ProductoVM> productos, String orderCode, OrderDetailVM orderInfo)
-            throws MPException {
-        MercadoPago.SDK.setAccessToken(accessToken);
-        Preference preference = new Preference();
+        public String createPreference(List<ProductoVM> productos, String orderCode, OrderDetailVM orderInfo)
+                        throws MPException {
+                MercadoPago.SDK.setAccessToken(accessToken);
+                Preference preference = new Preference();
 
-        // Crea un ítem en la preferencia
+                // Crea un ítem en la preferencia
 
-        for (int i = 0; i < productos.size(); i++) {
-            Item item = new Item();
-            item.setTitle(productos.get(i).getNombre())
-                    .setQuantity(productos.get(i).getCantidad().intValue())
-                    .setUnitPrice(Float.parseFloat(productos.get(i).getPrecio()));
-            preference.appendItem(item);
+                for (int i = 0; i < productos.size(); i++) {
+                        Item item = new Item();
+                        item.setTitle(productos.get(i).getNombre())
+                                        .setQuantity(productos.get(i).getCantidad().intValue())
+                                        .setUnitPrice(Float.parseFloat(productos.get(i).getPrecio()));
+                        preference.appendItem(item);
+                }
+                Item item = new Item();
+                item.setTitle("Costo de envio")
+                                .setQuantity(1)
+                                .setUnitPrice(orderInfo.getPrecio_extras_final());
+                preference.appendItem(item);
+
+                BackUrls backUrls = new BackUrls(
+                                urlNotification,
+                                urlNotification,
+                                urlNotification);
+                preference.setBackUrls(backUrls);
+                // preference.setBinaryMode(true);
+                preference.setExternalReference(orderCode);
+                preference.setAutoReturn(AutoReturn.all);
+                // Crea un ítem en la preferencia
+                preference.save();
+                return preference.getSandboxInitPoint();
+                // return preference.getInitPoint();
+
         }
-        Item item = new Item();
-        item.setTitle("Costo de envio")
-                .setQuantity(1)
-                .setUnitPrice(orderInfo.getPrecio_extras_final());
-        preference.appendItem(item);
-
-        BackUrls backUrls = new BackUrls(
-                urlNotification,
-                urlNotification,
-                urlNotification);
-        preference.setBackUrls(backUrls);
-        // preference.setBinaryMode(true);
-        preference.setExternalReference(orderCode);
-        preference.setAutoReturn(AutoReturn.all);
-        // Crea un ítem en la preferencia
-        preference.save();
-        // return preference.getSandboxInitPoint();
-        return preference.getInitPoint();
-
-    }
 
 }

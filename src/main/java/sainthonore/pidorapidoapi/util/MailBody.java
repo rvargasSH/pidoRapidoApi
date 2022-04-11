@@ -24,6 +24,8 @@ public class MailBody {
                 mailbody += "Los detalles de tu compra son:<br>";
                 mailbody += "<table><tr><th style='border: 1px solid black'>Producto</th><th style='border: 1px solid black'>Cantidad</th><th style='border: 1px solid black'>Precio</th></tr>";
                 for (int i = 0; i < orderInfo.getProductos().size(); i++) {
+                        Float priceByItem = Float.parseFloat(orderInfo.getProductos().get(i).getPrecio())
+                                        * orderInfo.getProductos().get(i).getCantidad();
                         mailbody += "<tr><td style='border: 1px solid black'>"
                                         + orderInfo.getProductos().get(i).getNombre()
                                         + "</td>";
@@ -31,9 +33,9 @@ public class MailBody {
                                         + orderInfo.getProductos().get(i).getCantidad()
                                         + "</td>";
                         mailbody += "<td style='border: 1px solid black'>$"
-                                        + orderInfo.getProductos().get(i).getPrecio()
+                                        + priceByItem
                                         + "</td></tr>";
-                        totalPrice += Float.parseFloat(orderInfo.getProductos().get(i).getPrecio());
+                        totalPrice += priceByItem;
                 }
                 if (orderInfo.getPrecioExtrasFinal() > 0) {
                         mailbody += "<tr><td style='border: 1px solid black'>Costo de envio</td>";
@@ -78,6 +80,8 @@ public class MailBody {
                                 + "</b>. A continuación verás el detalle de la compra:<br>";
                 mailbody += "<table><tr><th style='border: 1px solid black'>Producto</th><th style='border: 1px solid black'>Cantidad</th><th style='border: 1px solid black'>Precio</th></tr>";
                 for (int i = 0; i < orderInfo.getProductos().size(); i++) {
+                        Float priceByItem = Float.parseFloat(orderInfo.getProductos().get(i).getPrecio())
+                                        * orderInfo.getProductos().get(i).getCantidad();
                         mailbody += "<tr><td style='border: 1px solid black'>"
                                         + orderInfo.getProductos().get(i).getNombre()
                                         + "</td>";
@@ -85,9 +89,9 @@ public class MailBody {
                                         + orderInfo.getProductos().get(i).getCantidad()
                                         + "</td>";
                         mailbody += "<td style='border: 1px solid black'>$"
-                                        + orderInfo.getProductos().get(i).getPrecio()
+                                        + priceByItem
                                         + "</td></tr>";
-                        totalPrice += Float.parseFloat(orderInfo.getProductos().get(i).getPrecio());
+                        totalPrice += priceByItem;
                 }
                 if (orderInfo.getPrecioExtrasFinal() > 0) {
                         mailbody += "<tr><td style='border: 1px solid black'>Costo de envio</td>";
