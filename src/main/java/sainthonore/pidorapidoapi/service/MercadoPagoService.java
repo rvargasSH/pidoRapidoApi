@@ -55,8 +55,8 @@ public class MercadoPagoService {
                 preference.setAutoReturn(AutoReturn.all);
                 // Crea un ítem en la preferencia
                 preference.save();
-                return preference.getSandboxInitPoint();
-                // return preference.getInitPoint();
+                // return preference.getSandboxInitPoint();
+                return preference.getInitPoint();
 
         }
 
