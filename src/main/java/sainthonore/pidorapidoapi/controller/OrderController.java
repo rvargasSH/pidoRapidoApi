@@ -39,6 +39,7 @@ import sainthonore.pidorapidoapi.util.MailBody;
 import sainthonore.pidorapidoapi.util.PopulateOrder;
 import sainthonore.pidorapidoapi.util.ResponseUtil;
 import sainthonore.pidorapidoapi.util.SendMail;
+import sainthonore.pidorapidoapi.viewmodel.MailTestBody;
 import sainthonore.pidorapidoapi.viewmodel.MailVM;
 import sainthonore.pidorapidoapi.viewmodel.MercadoPagoResponse;
 import sainthonore.pidorapidoapi.viewmodel.OrderInfoVM;
@@ -291,6 +292,16 @@ public class OrderController {
 
             return false;
         }
+    }
+
+    @RequestMapping(value = "send-mail-by-test", method = RequestMethod.POST)
+    public ResponseEntity<?> sendMailByTest(@RequestBody MailTestBody mail)
+            throws UnknownHostException, MessagingException {
+
+        sendMail.singleAddress(mail.getMail(), "¡Tu pedido ya está listo!",
+                mailBody.orderDelivery("4524B", mail.getName(),
+                        "10", "3212184711"));
+        return ResponseEntity.ok("ok");
     }
 
 }
