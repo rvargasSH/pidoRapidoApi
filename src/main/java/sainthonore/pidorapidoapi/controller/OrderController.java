@@ -118,7 +118,8 @@ public class OrderController {
                 responseVM.setRedirect_url(
                         mercadoPagoService.createPreference(model.getOrder().getProductos(), orderCode,
                                 model.getOrder()));
-                LOGGER.info("response orderInfo ok:" + new Gson().toJson(responseVM));
+                LOGGER.info(
+                        "response orderInfo ok:orderCode:" + orderCode + "preference" + new Gson().toJson(responseVM));
                 return ResponseEntity.ok(responseVM);
             } else {
                 LOGGER.error("error orderInfo:No existe la tienda desde la cual esta intentando enviar la orden");
@@ -167,7 +168,7 @@ public class OrderController {
             @RequestParam String payment_id, @RequestParam String status, @RequestParam String external_reference,
             @RequestParam String merchant_order_id, @RequestParam String preference_id)
             throws UnknownHostException, MessagingException, URISyntaxException {
-        LOGGER.info("success" + external_reference);
+        LOGGER.info("success:external_reference" + external_reference + "preference_id:" + payment_id);
         try {
             Optional<OrderInfo> orderInfo = orderInfoRepository.findByOriCode(external_reference);
             if (orderInfo.isPresent()) {
