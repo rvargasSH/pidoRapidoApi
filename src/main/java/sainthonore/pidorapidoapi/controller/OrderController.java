@@ -176,6 +176,7 @@ public class OrderController {
                 orderInfo.get().setOrsId(Long.parseLong("2"));
                 orderInfo.get().setLastModifiedAt(new Date());
                 orderInfo.get().setPaimentId(payment_id);
+                orderInfoRepository.save(orderInfo.get());
 
                 // Send mail to the custom
                 sendMail.singleAddress(getEmail(orderInfo.get().getPreguntas()),
@@ -187,7 +188,7 @@ public class OrderController {
                         mailBody.storeMessage(orderInfo.get().getOriCode(), orderInfo.get().getBrand().getName(),
                                 orderInfo.get()));
                 Optional<Store> storeInfo = storeRepository.findById(orderInfo.get().getStoreId());
-                orderInfoRepository.save(orderInfo.get());
+
                 return ResponseEntity.ok(storeInfo.get().getUrlWebPage());
             } else {
                 LOGGER.error("error success:No existe la tienda desde la cual esta intentando enviar la orden ");
